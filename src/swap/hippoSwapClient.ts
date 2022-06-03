@@ -294,10 +294,10 @@ export class HippoSwapClient {
 
   printSelf() {
     for(const token of this.singleTokens) {
-      console.log(`Single token: ${token.symbol}, fullname=${getTypeTagFullname(typeInfoToTypeTag(token.token_type))}`);
+      console.log(`Single token: ${token.symbol}`);
     }
     for(const token of this.cpLPTokens) {
-      console.log(`CP LP token: ${token.symbol}, fullname=${getTypeTagFullname(typeInfoToTypeTag(token.token_type))}`);
+      console.log(`CP LP token: ${token.symbol}`);
     }
     for(const cpMeta of this.cpMetas) {
       if(!(cpMeta.typeTag instanceof StructTag)) {
@@ -306,11 +306,10 @@ export class HippoSwapClient {
       const [xTag, yTag] = cpMeta.typeTag.typeParams;
       const [xFullname, yFullname] = [xTag, yTag].map(getTypeTagFullname);
       const [xTokenInfo, yTokenInfo] = [xFullname, yFullname].map(name=>this.tokenFullnameToTokenInfo[name]);
-      const jointName = this.getJointName(xTag, yTag);
+      console.log("#############")
       console.log(`CP Pool: ${xTokenInfo.symbol} <-> ${yTokenInfo.symbol}`);
-      console.log(`CP joint name: ${jointName}`);
-      console.log(`CP x balance: ${cpMeta.balance_x.value}`);
-      console.log(`CP y balance: ${cpMeta.balance_y.value}`);
+      console.log(`CP x balance: ${cpMeta.balance_x.value.toJSNumber() / Math.pow(10, xTokenInfo.decimals)}`);
+      console.log(`CP y balance: ${cpMeta.balance_y.value.toJSNumber() / Math.pow(10, yTokenInfo.decimals)}`);
       console.log(`CP price (y-per-x): ${this.getCpPrice(cpMeta).yToX}`)
     }
   }

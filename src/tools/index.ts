@@ -8,6 +8,7 @@ import * as X0x1 from "../generated/X0x1";
 import { printResource, printResources, typeInfoToTypeTag } from "../utils";
 import { readConfig, sendPayloadTx } from "./utils";
 import { HippoSwapClient } from "../swap/hippoSwapClient";
+import { HippoWalletClient } from "../wallet";
 
 
 const actionShowTokenRegistry = async () => {
@@ -279,14 +280,31 @@ program
 const testCommand = new Command("test");
 
 const testHippoClient = async () => {
-  const typeTag = X0x1.Option.Option.fields[0].typeTag;
-  console.log(JSON.stringify(typeTag));
-  if(false)
-    return;
   const {client, account, contractAddress, netConf} = readConfig(program);
   const repo = getParserRepo();
   const swapClient = await HippoSwapClient.createInOneCall(netConf, client, repo);
   swapClient.printSelf();
+}
+
+const testWalletClient = async () => {
+  const {client, account, contractAddress, netConf} = readConfig(program);
+  const repo = getParserRepo();
+  const walletClient = await HippoWalletClient.createInTwoCalls(netConf, client, repo, account.address());
+  walletClient.debugPrint();
+}
+
+const testWalletClientFaucet = async (symbol: string, uiAmount: string) => {
+  const uiAmountNum = Number.parseFloat(uiAmount);
+  if(uiAmountNum <= 0) {
+    throw new Error(`Input amount needs to be greater than 0`);
+  }
+  const {client, account, contractAddress, netConf} = readConfig(program);
+  const repo = getParserRepo();
+  const walletClient = await HippoWalletClient.createInTwoCalls(netConf, client, repo, account.address());
+  const payload = await walletClient.makeFaucetMintToPayload(uiAmountNum, symbol);
+  await sendPayloadTx(client, account, payload);
+  await walletClient.refreshStores();
+  walletClient.debugPrint();
 }
 
 const testClientSwap = async(fromSymbol: string, toSymbol: string, uiAmtIn: string) => {
@@ -299,13 +317,22 @@ const testClientSwap = async(fromSymbol: string, toSymbol: string, uiAmtIn: stri
   }
   const payload = await swapClient.makeCPSwapPayload(fromSymbol, toSymbol, uiAmtInNum, 0);
   await sendPayloadTx(client, account, payload);
-
 }
 
 // sub-commands
 testCommand
-  .command("hippoClient")
+  .command("hippo-client")
   .action(testHippoClient);
+
+testCommand
+  .command("wallet-client")
+  .action(testWalletClient);
+
+testCommand
+  .command("wallet-client-faucet")
+  .argument("<token-symbol>")
+  .argument("<token-amount>")
+  .action(testWalletClientFaucet);
 
 testCommand
   .command("swap")
