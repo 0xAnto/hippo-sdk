@@ -64,16 +64,16 @@ export class LPCapability {
     {name: "$tv1", isPhantom: true}
   ];
   static fields: FieldDeclType[] = [
-    {name: "mint", typeTag: parseTypeTagOrThrow("0x1::Coin::MintCapability<0x49c5e3ec5041062f02a352e4a2d03ce2bb820d94e8ca736b08a324f8dc634790::StableCurveSwap::LPToken<$tv0,$tv1>>")},
-    {name: "burn", typeTag: parseTypeTagOrThrow("0x1::Coin::BurnCapability<0x49c5e3ec5041062f02a352e4a2d03ce2bb820d94e8ca736b08a324f8dc634790::StableCurveSwap::LPToken<$tv0,$tv1>>")}
+    {name: "mint_cap", typeTag: parseTypeTagOrThrow("0x1::Coin::MintCapability<0x49c5e3ec5041062f02a352e4a2d03ce2bb820d94e8ca736b08a324f8dc634790::StableCurveSwap::LPToken<$tv0,$tv1>>")},
+    {name: "burn_cap", typeTag: parseTypeTagOrThrow("0x1::Coin::BurnCapability<0x49c5e3ec5041062f02a352e4a2d03ce2bb820d94e8ca736b08a324f8dc634790::StableCurveSwap::LPToken<$tv0,$tv1>>")}
   ];
 
-  mint: X0x1.Coin.MintCapability;
-  burn: X0x1.Coin.BurnCapability;
+  mint_cap: X0x1.Coin.MintCapability;
+  burn_cap: X0x1.Coin.BurnCapability;
 
   constructor(proto: any, public typeTag: TypeTag) {
-    this.mint = proto['mint'] as X0x1.Coin.MintCapability;
-    this.burn = proto['burn'] as X0x1.Coin.BurnCapability;
+    this.mint_cap = proto['mint_cap'] as X0x1.Coin.MintCapability;
+    this.burn_cap = proto['burn_cap'] as X0x1.Coin.BurnCapability;
   }
 
   static LPCapabilityParser(data:any, typeTag: TypeTag, repo: AptosParserRepo) : LPCapability {
@@ -103,10 +103,10 @@ export class StableCurvePoolInfo {
     {name: "fee_x", typeTag: parseTypeTagOrThrow("0x1::Coin::Coin<$tv0>")},
     {name: "fee_y", typeTag: parseTypeTagOrThrow("0x1::Coin::Coin<$tv1>")},
     {name: "lp_precision", typeTag: parseTypeTagOrThrow("u64")},
-    {name: "rate_x", typeTag: parseTypeTagOrThrow("u64")},
-    {name: "rate_y", typeTag: parseTypeTagOrThrow("u64")},
-    {name: "fee", typeTag: parseTypeTagOrThrow("u128")},
-    {name: "admin_fee", typeTag: parseTypeTagOrThrow("u128")},
+    {name: "multiplier_x", typeTag: parseTypeTagOrThrow("u64")},
+    {name: "multiplier_y", typeTag: parseTypeTagOrThrow("u64")},
+    {name: "fee", typeTag: parseTypeTagOrThrow("u64")},
+    {name: "admin_fee", typeTag: parseTypeTagOrThrow("u64")},
     {name: "initial_A", typeTag: parseTypeTagOrThrow("u64")},
     {name: "future_A", typeTag: parseTypeTagOrThrow("u64")},
     {name: "initial_A_time", typeTag: parseTypeTagOrThrow("u64")},
@@ -119,8 +119,8 @@ export class StableCurvePoolInfo {
   fee_x: X0x1.Coin.Coin;
   fee_y: X0x1.Coin.Coin;
   lp_precision: bigInt.BigInteger;
-  rate_x: bigInt.BigInteger;
-  rate_y: bigInt.BigInteger;
+  multiplier_x: bigInt.BigInteger;
+  multiplier_y: bigInt.BigInteger;
   fee: bigInt.BigInteger;
   admin_fee: bigInt.BigInteger;
   initial_A: bigInt.BigInteger;
@@ -135,8 +135,8 @@ export class StableCurvePoolInfo {
     this.fee_x = proto['fee_x'] as X0x1.Coin.Coin;
     this.fee_y = proto['fee_y'] as X0x1.Coin.Coin;
     this.lp_precision = proto['lp_precision'] as bigInt.BigInteger;
-    this.rate_x = proto['rate_x'] as bigInt.BigInteger;
-    this.rate_y = proto['rate_y'] as bigInt.BigInteger;
+    this.multiplier_x = proto['multiplier_x'] as bigInt.BigInteger;
+    this.multiplier_y = proto['multiplier_y'] as bigInt.BigInteger;
     this.fee = proto['fee'] as bigInt.BigInteger;
     this.admin_fee = proto['admin_fee'] as bigInt.BigInteger;
     this.initial_A = proto['initial_A'] as bigInt.BigInteger;

@@ -18,11 +18,13 @@ import * as X0x49c5e3ec5041062f02a352e4a2d03ce2bb820d94e8ca736b08a324f8dc634790_
 import * as X0x1_IterableTable from "./X0x1/IterableTable";
 import * as X0x49c5e3ec5041062f02a352e4a2d03ce2bb820d94e8ca736b08a324f8dc634790_Math from "./X0x49c5e3ec5041062f02a352e4a2d03ce2bb820d94e8ca736b08a324f8dc634790/Math";
 import * as X0x49c5e3ec5041062f02a352e4a2d03ce2bb820d94e8ca736b08a324f8dc634790_MockCoin from "./X0x49c5e3ec5041062f02a352e4a2d03ce2bb820d94e8ca736b08a324f8dc634790/MockCoin";
+import * as X0x49c5e3ec5041062f02a352e4a2d03ce2bb820d94e8ca736b08a324f8dc634790_MockDeploy from "./X0x49c5e3ec5041062f02a352e4a2d03ce2bb820d94e8ca736b08a324f8dc634790/MockDeploy";
 import * as X0x1_Option from "./X0x1/Option";
 import * as X0x1_Reconfiguration from "./X0x1/Reconfiguration";
 import * as X0x49c5e3ec5041062f02a352e4a2d03ce2bb820d94e8ca736b08a324f8dc634790_SafeMath from "./X0x49c5e3ec5041062f02a352e4a2d03ce2bb820d94e8ca736b08a324f8dc634790/SafeMath";
 import * as X0x1_Signer from "./X0x1/Signer";
 import * as X0x49c5e3ec5041062f02a352e4a2d03ce2bb820d94e8ca736b08a324f8dc634790_StableCurveNumeral from "./X0x49c5e3ec5041062f02a352e4a2d03ce2bb820d94e8ca736b08a324f8dc634790/StableCurveNumeral";
+import * as X0x49c5e3ec5041062f02a352e4a2d03ce2bb820d94e8ca736b08a324f8dc634790_StableCurveScripts from "./X0x49c5e3ec5041062f02a352e4a2d03ce2bb820d94e8ca736b08a324f8dc634790/StableCurveScripts";
 import * as X0x49c5e3ec5041062f02a352e4a2d03ce2bb820d94e8ca736b08a324f8dc634790_StableCurveSwap from "./X0x49c5e3ec5041062f02a352e4a2d03ce2bb820d94e8ca736b08a324f8dc634790/StableCurveSwap";
 import * as X0x1_Stake from "./X0x1/Stake";
 import * as X0x1_SystemAddresses from "./X0x1/SystemAddresses";
@@ -58,11 +60,13 @@ export function getParserRepo(): AptosParserRepo {
   X0x1_IterableTable.loadParsers(repo);
   X0x49c5e3ec5041062f02a352e4a2d03ce2bb820d94e8ca736b08a324f8dc634790_Math.loadParsers(repo);
   X0x49c5e3ec5041062f02a352e4a2d03ce2bb820d94e8ca736b08a324f8dc634790_MockCoin.loadParsers(repo);
+  X0x49c5e3ec5041062f02a352e4a2d03ce2bb820d94e8ca736b08a324f8dc634790_MockDeploy.loadParsers(repo);
   X0x1_Option.loadParsers(repo);
   X0x1_Reconfiguration.loadParsers(repo);
   X0x49c5e3ec5041062f02a352e4a2d03ce2bb820d94e8ca736b08a324f8dc634790_SafeMath.loadParsers(repo);
   X0x1_Signer.loadParsers(repo);
   X0x49c5e3ec5041062f02a352e4a2d03ce2bb820d94e8ca736b08a324f8dc634790_StableCurveNumeral.loadParsers(repo);
+  X0x49c5e3ec5041062f02a352e4a2d03ce2bb820d94e8ca736b08a324f8dc634790_StableCurveScripts.loadParsers(repo);
   X0x49c5e3ec5041062f02a352e4a2d03ce2bb820d94e8ca736b08a324f8dc634790_StableCurveSwap.loadParsers(repo);
   X0x1_Stake.loadParsers(repo);
   X0x1_SystemAddresses.loadParsers(repo);
