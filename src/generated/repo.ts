@@ -15,7 +15,6 @@ import * as X0x1_GUID from "./X0x1/GUID";
 import * as X0x1_Genesis from "./X0x1/Genesis";
 import * as X0x1_Hash from "./X0x1/Hash";
 import * as X0x49c5e3ec5041062f02a352e4a2d03ce2bb820d94e8ca736b08a324f8dc634790_HippoConfig from "./X0x49c5e3ec5041062f02a352e4a2d03ce2bb820d94e8ca736b08a324f8dc634790/HippoConfig";
-import * as X0x1_IterableTable from "./X0x1/IterableTable";
 import * as X0x49c5e3ec5041062f02a352e4a2d03ce2bb820d94e8ca736b08a324f8dc634790_Math from "./X0x49c5e3ec5041062f02a352e4a2d03ce2bb820d94e8ca736b08a324f8dc634790/Math";
 import * as X0x49c5e3ec5041062f02a352e4a2d03ce2bb820d94e8ca736b08a324f8dc634790_MockCoin from "./X0x49c5e3ec5041062f02a352e4a2d03ce2bb820d94e8ca736b08a324f8dc634790/MockCoin";
 import * as X0x49c5e3ec5041062f02a352e4a2d03ce2bb820d94e8ca736b08a324f8dc634790_MockDeploy from "./X0x49c5e3ec5041062f02a352e4a2d03ce2bb820d94e8ca736b08a324f8dc634790/MockDeploy";
@@ -57,7 +56,6 @@ export function getParserRepo(): AptosParserRepo {
   X0x1_Genesis.loadParsers(repo);
   X0x1_Hash.loadParsers(repo);
   X0x49c5e3ec5041062f02a352e4a2d03ce2bb820d94e8ca736b08a324f8dc634790_HippoConfig.loadParsers(repo);
-  X0x1_IterableTable.loadParsers(repo);
   X0x49c5e3ec5041062f02a352e4a2d03ce2bb820d94e8ca736b08a324f8dc634790_Math.loadParsers(repo);
   X0x49c5e3ec5041062f02a352e4a2d03ce2bb820d94e8ca736b08a324f8dc634790_MockCoin.loadParsers(repo);
   X0x49c5e3ec5041062f02a352e4a2d03ce2bb820d94e8ca736b08a324f8dc634790_MockDeploy.loadParsers(repo);

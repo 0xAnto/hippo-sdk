@@ -10,7 +10,6 @@ export * as Event from "./Event";
 export * as GUID from "./GUID";
 export * as Genesis from "./Genesis";
 export * as Hash from "./Hash";
-export * as IterableTable from "./IterableTable";
 export * as Option from "./Option";
 export * as Reconfiguration from "./Reconfiguration";
 export * as Signer from "./Signer";

@@ -13,49 +13,50 @@ import { getTypeTagFullname } from "@manahippo/aptos-tsgen";
 import { sendAndWait } from "@manahippo/aptos-tsgen";
 import { buildPayload } from "@manahippo/aptos-tsgen";
 import * as Coin from "./Coin";
-import * as IterableTable from "./IterableTable";
 
 export const moduleAddress = new HexString("0x1");
 export const moduleName = "Stake";
 
-export const EDELEGATION_NOT_FOUND: bigInt.BigInteger = bigInt("1");
-export const EALREADY_VALIDATOR: bigInt.BigInteger = bigInt("7");
-export const EDELEGATION_ALREADY_EXIST: bigInt.BigInteger = bigInt("10");
-export const EDELEGATION_EXCEED_MAX: bigInt.BigInteger = bigInt("11");
-export const ELAST_VALIDATOR: bigInt.BigInteger = bigInt("9");
-export const ELOCK_TIME_TOO_SHORT: bigInt.BigInteger = bigInt("2");
-export const ENOT_VALIDATOR: bigInt.BigInteger = bigInt("8");
-export const ESTAKE_TOO_HIGH: bigInt.BigInteger = bigInt("6");
-export const ESTAKE_TOO_LOW: bigInt.BigInteger = bigInt("5");
-export const EVALIDATOR_CONFIG: bigInt.BigInteger = bigInt("4");
-export const EWITHDRAW_NOT_ALLOWED: bigInt.BigInteger = bigInt("3");
+export const EALREADY_REGISTERED: bigInt.BigInteger = bigInt("10");
+export const EALREADY_VALIDATOR: bigInt.BigInteger = bigInt("6");
+export const ELAST_VALIDATOR: bigInt.BigInteger = bigInt("8");
+export const ELOCK_TIME_TOO_SHORT: bigInt.BigInteger = bigInt("1");
+export const ENOT_OPERATOR: bigInt.BigInteger = bigInt("13");
+export const ENOT_OWNER: bigInt.BigInteger = bigInt("11");
+export const ENOT_VALIDATOR: bigInt.BigInteger = bigInt("7");
+export const ENO_COINS_TO_WITHDRAW: bigInt.BigInteger = bigInt("12");
+export const ESTAKE_EXCEEDS_MAX: bigInt.BigInteger = bigInt("9");
+export const ESTAKE_TOO_HIGH: bigInt.BigInteger = bigInt("5");
+export const ESTAKE_TOO_LOW: bigInt.BigInteger = bigInt("4");
+export const EVALIDATOR_CONFIG: bigInt.BigInteger = bigInt("3");
+export const EWITHDRAW_NOT_ALLOWED: bigInt.BigInteger = bigInt("2");
 export const MINIMUM_LOCK_PERIOD: bigInt.BigInteger = bigInt("86400");
+export const REWARDS_RATE_PERCENT: bigInt.BigInteger = bigInt("1");
 
-export class Delegation {
+export class OwnerCapability {
   static moduleAddress = moduleAddress;
   static moduleName = moduleName;
-  static structName: string = "Delegation";
+  static structName: string = "OwnerCapability";
   static typeParameters: TypeParamDeclType[] = [
   ];
   static fields: FieldDeclType[] = [
-    {name: "coins", typeTag: parseTypeTagOrThrow("0x1::Coin::Coin<0x1::TestCoin::TestCoin>")},
-    {name: "rewards", typeTag: parseTypeTagOrThrow("0x1::Coin::Coin<0x1::TestCoin::TestCoin>")},
-    {name: "locked_until_secs", typeTag: parseTypeTagOrThrow("u64")}
+    {name: "pool_address", typeTag: parseTypeTagOrThrow("address")}
   ];
 
-  coins: Coin.Coin;
-  rewards: Coin.Coin;
-  locked_until_secs: bigInt.BigInteger;
+  pool_address: HexString;
 
   constructor(proto: any, public typeTag: TypeTag) {
-    this.coins = proto['coins'] as Coin.Coin;
-    this.rewards = proto['rewards'] as Coin.Coin;
-    this.locked_until_secs = proto['locked_until_secs'] as bigInt.BigInteger;
+    this.pool_address = proto['pool_address'] as HexString;
   }
 
-  static DelegationParser(data:any, typeTag: TypeTag, repo: AptosParserRepo) : Delegation {
-    const proto = parseStructProto(data, typeTag, repo, Delegation);
-    return new Delegation(proto, typeTag);
+  static OwnerCapabilityParser(data:any, typeTag: TypeTag, repo: AptosParserRepo) : OwnerCapability {
+    const proto = parseStructProto(data, typeTag, repo, OwnerCapability);
+    return new OwnerCapability(proto, typeTag);
+  }
+
+  static async load(repo: AptosParserRepo, client: AptosClient, address: HexString, typeParams: TypeTag[]) {
+    const result = await repo.loadResource(client, address, OwnerCapability, typeParams);
+    return result as unknown as OwnerCapability;
   }
 
 }
@@ -67,28 +68,28 @@ export class StakePool {
   static typeParameters: TypeParamDeclType[] = [
   ];
   static fields: FieldDeclType[] = [
-    {name: "voting_power", typeTag: parseTypeTagOrThrow("u64")},
-    {name: "next_epoch_voting_power", typeTag: parseTypeTagOrThrow("u64")},
-    {name: "active", typeTag: parseTypeTagOrThrow("0x1::IterableTable::IterableTable<address,0x1::Stake::Delegation>")},
-    {name: "inactive", typeTag: parseTypeTagOrThrow("0x1::IterableTable::IterableTable<address,0x1::Stake::Delegation>")},
-    {name: "pending_active", typeTag: parseTypeTagOrThrow("0x1::IterableTable::IterableTable<address,0x1::Stake::Delegation>")},
-    {name: "pending_inactive", typeTag: parseTypeTagOrThrow("0x1::IterableTable::IterableTable<address,0x1::Stake::Delegation>")}
+    {name: "active", typeTag: parseTypeTagOrThrow("0x1::Coin::Coin<0x1::TestCoin::TestCoin>")},
+    {name: "inactive", typeTag: parseTypeTagOrThrow("0x1::Coin::Coin<0x1::TestCoin::TestCoin>")},
+    {name: "pending_active", typeTag: parseTypeTagOrThrow("0x1::Coin::Coin<0x1::TestCoin::TestCoin>")},
+    {name: "pending_inactive", typeTag: parseTypeTagOrThrow("0x1::Coin::Coin<0x1::TestCoin::TestCoin>")},
+    {name: "locked_until_secs", typeTag: parseTypeTagOrThrow("u64")},
+    {name: "operator_address", typeTag: parseTypeTagOrThrow("address")}
   ];
 
-  voting_power: bigInt.BigInteger;
-  next_epoch_voting_power: bigInt.BigInteger;
-  active: IterableTable.IterableTable;
-  inactive: IterableTable.IterableTable;
-  pending_active: IterableTable.IterableTable;
-  pending_inactive: IterableTable.IterableTable;
+  active: Coin.Coin;
+  inactive: Coin.Coin;
+  pending_active: Coin.Coin;
+  pending_inactive: Coin.Coin;
+  locked_until_secs: bigInt.BigInteger;
+  operator_address: HexString;
 
   constructor(proto: any, public typeTag: TypeTag) {
-    this.voting_power = proto['voting_power'] as bigInt.BigInteger;
-    this.next_epoch_voting_power = proto['next_epoch_voting_power'] as bigInt.BigInteger;
-    this.active = proto['active'] as IterableTable.IterableTable;
-    this.inactive = proto['inactive'] as IterableTable.IterableTable;
-    this.pending_active = proto['pending_active'] as IterableTable.IterableTable;
-    this.pending_inactive = proto['pending_inactive'] as IterableTable.IterableTable;
+    this.active = proto['active'] as Coin.Coin;
+    this.inactive = proto['inactive'] as Coin.Coin;
+    this.pending_active = proto['pending_active'] as Coin.Coin;
+    this.pending_inactive = proto['pending_inactive'] as Coin.Coin;
+    this.locked_until_secs = proto['locked_until_secs'] as bigInt.BigInteger;
+    this.operator_address = proto['operator_address'] as HexString;
   }
 
   static StakePoolParser(data:any, typeTag: TypeTag, repo: AptosParserRepo) : StakePool {
@@ -209,66 +210,32 @@ export class ValidatorSet {
 
 }
 
-export async function unlock(
-  client: AptosClient,
-  account: AptosAccount,
-  from: HexString,
-  typeParams: TypeTag[],
-) {
-  const typeParamStrings = typeParams.map(t=>getTypeTagFullname(t));
-  return sendAndWait(
-    client,
-    account,
-    "0x1::Stake::unlock",
-    typeParamStrings,
-    [
-      from,
-    ]
-  );
-}
-export function build_payload_unlock(
-  from: HexString,
-  typeParams: TypeTag[],
-) {
-  const typeParamStrings = typeParams.map(t=>getTypeTagFullname(t));
-  return buildPayload(
-    "0x1::Stake::unlock",
-    typeParamStrings,
-    [
-      from,
-    ]
-  );
-}
+export class TestCoinCapabilities {
+  static moduleAddress = moduleAddress;
+  static moduleName = moduleName;
+  static structName: string = "TestCoinCapabilities";
+  static typeParameters: TypeParamDeclType[] = [
+  ];
+  static fields: FieldDeclType[] = [
+    {name: "mint_cap", typeTag: parseTypeTagOrThrow("0x1::Coin::MintCapability<0x1::TestCoin::TestCoin>")}
+  ];
 
-export async function withdraw(
-  client: AptosClient,
-  account: AptosAccount,
-  from: HexString,
-  typeParams: TypeTag[],
-) {
-  const typeParamStrings = typeParams.map(t=>getTypeTagFullname(t));
-  return sendAndWait(
-    client,
-    account,
-    "0x1::Stake::withdraw",
-    typeParamStrings,
-    [
-      from,
-    ]
-  );
-}
-export function build_payload_withdraw(
-  from: HexString,
-  typeParams: TypeTag[],
-) {
-  const typeParamStrings = typeParams.map(t=>getTypeTagFullname(t));
-  return buildPayload(
-    "0x1::Stake::withdraw",
-    typeParamStrings,
-    [
-      from,
-    ]
-  );
+  mint_cap: Coin.MintCapability;
+
+  constructor(proto: any, public typeTag: TypeTag) {
+    this.mint_cap = proto['mint_cap'] as Coin.MintCapability;
+  }
+
+  static TestCoinCapabilitiesParser(data:any, typeTag: TypeTag, repo: AptosParserRepo) : TestCoinCapabilities {
+    const proto = parseStructProto(data, typeTag, repo, TestCoinCapabilities);
+    return new TestCoinCapabilities(proto, typeTag);
+  }
+
+  static async load(repo: AptosParserRepo, client: AptosClient, address: HexString, typeParams: TypeTag[]) {
+    const result = await repo.loadResource(client, address, TestCoinCapabilities, typeParams);
+    return result as unknown as TestCoinCapabilities;
+  }
+
 }
 
 export async function register_validator_candidate(
@@ -310,9 +277,72 @@ export function build_payload_register_validator_candidate(
   );
 }
 
+export async function set_operator(
+  client: AptosClient,
+  account: AptosAccount,
+  new_operator: HexString,
+  typeParams: TypeTag[],
+) {
+  const typeParamStrings = typeParams.map(t=>getTypeTagFullname(t));
+  return sendAndWait(
+    client,
+    account,
+    "0x1::Stake::set_operator",
+    typeParamStrings,
+    [
+      new_operator,
+    ]
+  );
+}
+export function build_payload_set_operator(
+  new_operator: HexString,
+  typeParams: TypeTag[],
+) {
+  const typeParamStrings = typeParams.map(t=>getTypeTagFullname(t));
+  return buildPayload(
+    "0x1::Stake::set_operator",
+    typeParamStrings,
+    [
+      new_operator,
+    ]
+  );
+}
+
+export async function add_stake(
+  client: AptosClient,
+  account: AptosAccount,
+  amount: bigInt.BigInteger,
+  typeParams: TypeTag[],
+) {
+  const typeParamStrings = typeParams.map(t=>getTypeTagFullname(t));
+  return sendAndWait(
+    client,
+    account,
+    "0x1::Stake::add_stake",
+    typeParamStrings,
+    [
+      amount.toString(),
+    ]
+  );
+}
+export function build_payload_add_stake(
+  amount: bigInt.BigInteger,
+  typeParams: TypeTag[],
+) {
+  const typeParamStrings = typeParams.map(t=>getTypeTagFullname(t));
+  return buildPayload(
+    "0x1::Stake::add_stake",
+    typeParamStrings,
+    [
+      amount.toString(),
+    ]
+  );
+}
+
 export async function rotate_consensus_key(
   client: AptosClient,
   account: AptosAccount,
+  pool_address: HexString,
   consensus_pubkey: AptosVectorU8,
   typeParams: TypeTag[],
 ) {
@@ -323,11 +353,13 @@ export async function rotate_consensus_key(
     "0x1::Stake::rotate_consensus_key",
     typeParamStrings,
     [
+      pool_address,
       consensus_pubkey.hex(),
     ]
   );
 }
 export function build_payload_rotate_consensus_key(
+  pool_address: HexString,
   consensus_pubkey: AptosVectorU8,
   typeParams: TypeTag[],
 ) {
@@ -336,15 +368,104 @@ export function build_payload_rotate_consensus_key(
     "0x1::Stake::rotate_consensus_key",
     typeParamStrings,
     [
+      pool_address,
       consensus_pubkey.hex(),
     ]
   );
 }
 
+export async function increase_lockup(
+  client: AptosClient,
+  account: AptosAccount,
+  new_locked_until_secs: bigInt.BigInteger,
+  typeParams: TypeTag[],
+) {
+  const typeParamStrings = typeParams.map(t=>getTypeTagFullname(t));
+  return sendAndWait(
+    client,
+    account,
+    "0x1::Stake::increase_lockup",
+    typeParamStrings,
+    [
+      new_locked_until_secs.toString(),
+    ]
+  );
+}
+export function build_payload_increase_lockup(
+  new_locked_until_secs: bigInt.BigInteger,
+  typeParams: TypeTag[],
+) {
+  const typeParamStrings = typeParams.map(t=>getTypeTagFullname(t));
+  return buildPayload(
+    "0x1::Stake::increase_lockup",
+    typeParamStrings,
+    [
+      new_locked_until_secs.toString(),
+    ]
+  );
+}
+
+export async function unlock(
+  client: AptosClient,
+  account: AptosAccount,
+  amount: bigInt.BigInteger,
+  typeParams: TypeTag[],
+) {
+  const typeParamStrings = typeParams.map(t=>getTypeTagFullname(t));
+  return sendAndWait(
+    client,
+    account,
+    "0x1::Stake::unlock",
+    typeParamStrings,
+    [
+      amount.toString(),
+    ]
+  );
+}
+export function build_payload_unlock(
+  amount: bigInt.BigInteger,
+  typeParams: TypeTag[],
+) {
+  const typeParamStrings = typeParams.map(t=>getTypeTagFullname(t));
+  return buildPayload(
+    "0x1::Stake::unlock",
+    typeParamStrings,
+    [
+      amount.toString(),
+    ]
+  );
+}
+
+export async function withdraw(
+  client: AptosClient,
+  account: AptosAccount,
+  typeParams: TypeTag[],
+) {
+  const typeParamStrings = typeParams.map(t=>getTypeTagFullname(t));
+  return sendAndWait(
+    client,
+    account,
+    "0x1::Stake::withdraw",
+    typeParamStrings,
+    []
+  );
+}
+export function build_payload_withdraw(
+  typeParams: TypeTag[],
+) {
+  const typeParamStrings = typeParams.map(t=>getTypeTagFullname(t));
+  return buildPayload(
+    "0x1::Stake::withdraw",
+    typeParamStrings,
+    []
+  );
+}
+
 export function loadParsers(repo: AptosParserRepo) {
-  repo.addParser("0x1::Stake::Delegation", Delegation.DelegationParser);
+  repo.addParser("0x1::Stake::OwnerCapability", OwnerCapability.OwnerCapabilityParser);
   repo.addParser("0x1::Stake::StakePool", StakePool.StakePoolParser);
   repo.addParser("0x1::Stake::ValidatorConfig", ValidatorConfig.ValidatorConfigParser);
   repo.addParser("0x1::Stake::ValidatorInfo", ValidatorInfo.ValidatorInfoParser);
   repo.addParser("0x1::Stake::ValidatorSet", ValidatorSet.ValidatorSetParser);
+  repo.addParser("0x1::Stake::TestCoinCapabilities", TestCoinCapabilities.TestCoinCapabilitiesParser);
 }

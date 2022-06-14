@@ -7,7 +7,7 @@ import * as SwapTs from "../generated/X0x49c5e3ec5041062f02a352e4a2d03ce2bb820d9
 import * as X0x1 from "../generated/X0x1";
 import { printResource, printResources, typeInfoToTypeTag } from "../utils";
 import { readConfig, sendPayloadTx } from "./utils";
-import { HippoSwapClient } from "../swap/hippoSwapClient";
+import { HippoSwapClient } from '../swap';
 import { HippoWalletClient } from "../wallet";
 
 
@@ -27,7 +27,7 @@ const actionShowPools = async () => {
     const structTag = typeInfoToTypeTag(pi.token_type);
     if (
       structTag instanceof StructTag &&
-      structTag.address.hex() === contractAddress.hex() && 
+      structTag.address.hex() === contractAddress.hex() &&
       structTag.module === SwapTs.CPSwap.moduleName &&
       structTag.name === SwapTs.CPSwap.LPToken.structName
     ) {
@@ -37,6 +37,16 @@ const actionShowPools = async () => {
       printResource(poolMeta);
       const poolReserve = await SwapTs.CPSwap.TokenPairReserve.load(repo, client, contractAddress, structTag.typeParams);
       printResource(poolReserve);
+    }
+    else if (
+      structTag instanceof StructTag &&
+      structTag.address.hex() == contractAddress.hex() &&
+      structTag.module === SwapTs.StableCurveSwap.moduleName &&
+      structTag.name === SwapTs.StableCurveSwap.LPToken.structName
+    ){
+      console.log(structTag.typeParams)
+      const poolMeta = await SwapTs.StableCurveSwap.StableCurvePoolInfo.load(repo, client, contractAddress, structTag.typeParams);
+      printResource(poolMeta);
     }
   }
 }
@@ -83,10 +93,10 @@ const actionShowWallet = async() => {
 }
 
 const getFromToAndLps = async(
-  repo: AptosParserRepo, 
-  client: AptosClient, 
-  contractAddress: HexString, 
-  fromSymbol: string, 
+  repo: AptosParserRepo,
+  client: AptosClient,
+  contractAddress: HexString,
+  fromSymbol: string,
   toSymbol: string
 ) => {
   const registry = await SwapTs.TokenRegistry.TokenRegistry.load(repo, client, contractAddress, []);
@@ -109,7 +119,7 @@ const getFromToAndLps = async(
     // look for our LP token
     if (
       coinTypeTag instanceof StructTag &&
-      coinTypeTag.address.hex() === contractAddress.hex() && 
+      coinTypeTag.address.hex() === contractAddress.hex() &&
       coinTypeTag.module === SwapTs.CPSwap.moduleName &&
       coinTypeTag.name === SwapTs.CPSwap.LPToken.structName
     ) {
@@ -206,7 +216,12 @@ const actionMockDeploy = async () => {
   const {client, account, contractAddress} = readConfig(program);
   const payload = await SwapTs.CPScripts.build_payload_mock_deploy_script([]);
   await sendPayloadTx(client, account, payload, 10000);
+  console.log('cpswap')
+  const stableCurvePayload = await SwapTs.StableCurveScripts.build_payload_mock_deploy_script([])
+  await sendPayloadTx(client, account, stableCurvePayload, 10000);
+  console.log('stable curve swap')
 }
+
 
 const actionListModules = async () => {
   const {client, account, contractAddress} = readConfig(program);
