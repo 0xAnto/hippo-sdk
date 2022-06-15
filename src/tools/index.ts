@@ -1,4 +1,4 @@
-import { AptosParserRepo, getTypeTagFullname, StructTag } from "@manahippo/aptos-tsgen";
+import { AptosParserRepo, AptosVectorU8, getTypeTagFullname, StructTag } from "@manahippo/aptos-tsgen";
 import { AptosClient, HexString, Types } from "aptos";
 import bigInt from "big-integer";
 import { Command } from "commander";
@@ -6,9 +6,12 @@ import { getParserRepo } from "../generated/repo";
 import * as SwapTs from "../generated/X0x49c5e3ec5041062f02a352e4a2d03ce2bb820d94e8ca736b08a324f8dc634790";
 import * as X0x1 from "../generated/X0x1";
 import { printResource, printResources, typeInfoToTypeTag } from "../utils";
-import { readConfig, sendPayloadTx } from "./utils";
-import { HippoSwapClient } from '../swap';
+import { readConfig, sendPayloadTx, simulatePayloadTx } from "./utils";
+import { HippoSwapClient } from "../swap/hippoSwapClient";
 import { HippoWalletClient } from "../wallet";
+import { CoinInfo } from "../generated/X0x1/Coin";
+import { time } from "console";
+import { PoolType } from "../swap/baseTypes";
 
 
 const actionShowTokenRegistry = async () => {
@@ -27,7 +30,7 @@ const actionShowPools = async () => {
     const structTag = typeInfoToTypeTag(pi.token_type);
     if (
       structTag instanceof StructTag &&
-      structTag.address.hex() === contractAddress.hex() &&
+      structTag.address.hex() === contractAddress.hex() && 
       structTag.module === SwapTs.CPSwap.moduleName &&
       structTag.name === SwapTs.CPSwap.LPToken.structName
     ) {
@@ -37,16 +40,6 @@ const actionShowPools = async () => {
       printResource(poolMeta);
       const poolReserve = await SwapTs.CPSwap.TokenPairReserve.load(repo, client, contractAddress, structTag.typeParams);
       printResource(poolReserve);
-    }
-    else if (
-      structTag instanceof StructTag &&
-      structTag.address.hex() == contractAddress.hex() &&
-      structTag.module === SwapTs.StableCurveSwap.moduleName &&
-      structTag.name === SwapTs.StableCurveSwap.LPToken.structName
-    ){
-      console.log(structTag.typeParams)
-      const poolMeta = await SwapTs.StableCurveSwap.StableCurvePoolInfo.load(repo, client, contractAddress, structTag.typeParams);
-      printResource(poolMeta);
     }
   }
 }
@@ -93,10 +86,10 @@ const actionShowWallet = async() => {
 }
 
 const getFromToAndLps = async(
-  repo: AptosParserRepo,
-  client: AptosClient,
-  contractAddress: HexString,
-  fromSymbol: string,
+  repo: AptosParserRepo, 
+  client: AptosClient, 
+  contractAddress: HexString, 
+  fromSymbol: string, 
   toSymbol: string
 ) => {
   const registry = await SwapTs.TokenRegistry.TokenRegistry.load(repo, client, contractAddress, []);
@@ -119,7 +112,7 @@ const getFromToAndLps = async(
     // look for our LP token
     if (
       coinTypeTag instanceof StructTag &&
-      coinTypeTag.address.hex() === contractAddress.hex() &&
+      coinTypeTag.address.hex() === contractAddress.hex() && 
       coinTypeTag.module === SwapTs.CPSwap.moduleName &&
       coinTypeTag.name === SwapTs.CPSwap.LPToken.structName
     ) {
@@ -216,12 +209,7 @@ const actionMockDeploy = async () => {
   const {client, account, contractAddress} = readConfig(program);
   const payload = await SwapTs.CPScripts.build_payload_mock_deploy_script([]);
   await sendPayloadTx(client, account, payload, 10000);
-  console.log('cpswap')
-  const stableCurvePayload = await SwapTs.StableCurveScripts.build_payload_mock_deploy_script([])
-  await sendPayloadTx(client, account, stableCurvePayload, 10000);
-  console.log('stable curve swap')
 }
-
 
 const actionListModules = async () => {
   const {client, account, contractAddress} = readConfig(program);
@@ -330,12 +318,67 @@ const testClientSwap = async(fromSymbol: string, toSymbol: string, uiAmtIn: stri
   if(uiAmtInNum <= 0) {
     throw new Error(`Input amount needs to be greater than 0`);
   }
-  const payload = await swapClient.makeCPSwapPayload(fromSymbol, toSymbol, uiAmtInNum, 0);
+  const result = swapClient.getBestQuoteBySymbols(fromSymbol, toSymbol, uiAmtInNum, 3);
+  if (!result) {
+    console.log("No route");
+    return;
+  }
+  const {bestRoute} = result;
+  const payload = await bestRoute.makeSwapPayload(uiAmtInNum, 0);
   await sendPayloadTx(client, account, payload);
   await testWalletClient();
 }
 
-const testClientAddLiquidity = async(lhsSymbol: string, rhsSymbol: string, lhsUiAmtStr: string, rhsUiAmtStr: string) => {
+const testClientSimulateSwap = async(fromSymbol: string, toSymbol: string, uiAmtIn: string) => {
+  const {client, account, contractAddress, netConf} = readConfig(program);
+  const repo = getParserRepo();
+  const swapClient = await HippoSwapClient.createInOneCall(netConf, client, repo);
+  const uiAmtInNum = Number.parseFloat(uiAmtIn);
+  if(uiAmtInNum <= 0) {
+    throw new Error(`Input amount needs to be greater than 0`);
+  }
+  const result = swapClient.getBestQuoteBySymbols(fromSymbol, toSymbol, uiAmtInNum, 3);
+  if (!result) {
+    console.log("No route");
+    return;
+  }
+  const {bestRoute} = result;
+  const payload = await bestRoute.makeSwapPayload(uiAmtInNum, 0);
+  const simResult = await simulatePayloadTx(client, account, payload);
+  printResource(simResult);
+  await testWalletClient();
+}
+
+const testClientQuote = async(fromSymbol: string, toSymbol: string, uiAmtIn: string) => {
+  const {client, account, contractAddress, netConf} = readConfig(program);
+  const repo = getParserRepo();
+  const swapClient = await HippoSwapClient.createInOneCall(netConf, client, repo);
+  const uiAmtInNum = Number.parseFloat(uiAmtIn);
+  if(uiAmtInNum <= 0) {
+    throw new Error(`Input amount needs to be greater than 0`);
+  }
+  const result = await swapClient.getBestQuoteBySymbols(fromSymbol, toSymbol, uiAmtInNum, 3);
+  if (!result) {
+    console.log("No route");
+    return;
+  }
+  const {bestQuote} = result;
+  printResource(bestQuote);
+}
+
+const poolTypeMap = {
+  cp: PoolType.CONSTANT_PRODUCT,
+  stable: PoolType.STABLE_CURVE,
+}
+
+function cliPoolTypeToPoolType(poolType: string): PoolType {
+  if (poolType in poolTypeMap) {
+    return poolTypeMap[poolType as keyof typeof poolTypeMap];
+  }
+  throw new Error(`${poolType} does not refer to a valid poolType. Valid values are: ${Object.keys(poolTypeMap)}`);
+}
+
+const testClientAddLiquidity = async(poolTypeStr: string, lhsSymbol: string, rhsSymbol: string, lhsUiAmtStr: string, rhsUiAmtStr: string) => {
   const {client, account, contractAddress, netConf} = readConfig(program);
   const repo = getParserRepo();
   const swapClient = await HippoSwapClient.createInOneCall(netConf, client, repo);
@@ -344,12 +387,26 @@ const testClientAddLiquidity = async(lhsSymbol: string, rhsSymbol: string, lhsUi
   if(lhsUiAmt <= 0 || rhsUiAmt <= 0) {
     throw new Error(`Input amount needs to be greater than 0`);
   }
-  const payload = await swapClient.makeCPAddLiquidityPayload(lhsSymbol, rhsSymbol, lhsUiAmt, rhsUiAmt);
+  const poolType = cliPoolTypeToPoolType(poolTypeStr);
+  const pools = await swapClient.getDirectPoolsBySymbolsAndPoolType(lhsSymbol, rhsSymbol, poolType);
+  if (pools.length === 0) {
+    console.log("Corresponding pool does not exist");
+    return;
+  }
+  if (pools.length !== 1) {
+    console.log("Found multiple pools of the same type???");
+    return;
+  }
+  if (pools[0].xTokenInfo.symbol !== lhsSymbol || pools[0].yTokenInfo.symbol !== rhsSymbol) {
+    console.log("Pool mismatch");
+    return;
+  }
+  const payload = await pools[0].makeAddLiquidityPayload(lhsUiAmt, rhsUiAmt);
   await sendPayloadTx(client, account, payload);
   await testWalletClient();
 }
 
-const testClientRemoveLiquidity = async(lhsSymbol: string, rhsSymbol: string, liquidityUiAmtStr: string) => {
+const testClientRemoveLiquidity = async(poolTypeStr: string, lhsSymbol: string, rhsSymbol: string, liquidityUiAmtStr: string) => {
   const {client, account, contractAddress, netConf} = readConfig(program);
   const repo = getParserRepo();
   const swapClient = await HippoSwapClient.createInOneCall(netConf, client, repo);
@@ -357,9 +414,39 @@ const testClientRemoveLiquidity = async(lhsSymbol: string, rhsSymbol: string, li
   if(liquidityUiAmt <= 0) {
     throw new Error(`Input amount needs to be greater than 0`);
   }
-  const payload = await swapClient.makeCPRemoveLiquidityPayload(lhsSymbol, rhsSymbol, liquidityUiAmt, 0, 0);
+  const poolType = cliPoolTypeToPoolType(poolTypeStr);
+  const pools = await swapClient.getDirectPoolsBySymbolsAndPoolType(lhsSymbol, rhsSymbol, poolType);
+  if (pools.length === 0) {
+    console.log("Corresponding pool does not exist");
+    return;
+  }
+  if (pools.length !== 1) {
+    console.log("Found multiple pools of the same type???");
+    return;
+  }
+  if (pools[0].xTokenInfo.symbol !== lhsSymbol || pools[0].yTokenInfo.symbol !== rhsSymbol) {
+    console.log("Pool mismatch");
+    return;
+  }
+  const payload = await pools[0].makeRemoveLiquidityPayload(liquidityUiAmt, 0, 0);
   await sendPayloadTx(client, account, payload);
   await testWalletClient();
+}
+
+const testShowSupply = async(symbol: string) => {
+  const {client, account, contractAddress, netConf} = readConfig(program);
+  const repo = getParserRepo();
+  const swapClient = await HippoSwapClient.createInOneCall(netConf, client, repo);
+  const supply = await swapClient.getTokenTotalSupplyBySymbol(symbol);
+  console.log(supply);
+}
+
+const testShowRoutes = async(lhsSymbol: string, rhsSymbol: string) => {
+  const {client, account, contractAddress, netConf} = readConfig(program);
+  const repo = getParserRepo();
+  const swapClient = await HippoSwapClient.createInOneCall(netConf, client, repo);
+  const routes = swapClient.getSteppedRoutesBySymbol(lhsSymbol, rhsSymbol, 3);
+  printResources(routes.map(r=>r.summarize()));
 }
 
 // sub-commands
@@ -385,7 +472,22 @@ testCommand
   .action(testClientSwap);
 
 testCommand
+  .command("simulate-swap")
+  .argument("<from-symbol>")
+  .argument("<to-symbol>")
+  .argument("<ui-amount-in>")
+  .action(testClientSimulateSwap);
+
+testCommand
+  .command("quote")
+  .argument("<from-symbol>")
+  .argument("<to-symbol>")
+  .argument("<ui-amount-in>")
+  .action(testClientQuote);
+
+testCommand
   .command("add-liquidity")
+  .argument("<pool-type>", "pool-type may be 'cp' or 'stable'")
   .argument("<lhs-symbol>")
   .argument("<rhs-symbol>")
   .argument("<lhs-ui-amount-in>")
@@ -394,11 +496,89 @@ testCommand
 
 testCommand
   .command("remove-liquidity")
+  .argument("<pool-type>", "pool-type may be 'cp' or 'stable'")
   .argument("<lhs-symbol>")
   .argument("<rhs-symbol>")
   .argument("<liquidity-ui-amount>")
   .action(testClientRemoveLiquidity);
 
+testCommand
+  .command("show-supply")
+  .argument("<SYMBOL>")
+  .action(testShowSupply);
+
+testCommand
+  .command("show-routes")
+  .argument("<lhs-symbol>")
+  .argument("<rhs-symbol>")
+  .action(testShowRoutes);
+
 program.addCommand(testCommand);
+
+// other random things
+
+const checkTestCoin = async () => {
+  const {client, account, contractAddress, netConf} = readConfig(program);
+  const repo = getParserRepo();
+  const testCoinTag = new StructTag(
+    X0x1.TestCoin.moduleAddress,
+    X0x1.TestCoin.moduleName,
+    X0x1.TestCoin.TestCoin.structName,
+    []
+  );
+  const testCoinInfo = await CoinInfo.load(repo, client, X0x1.TestCoin.moduleAddress, [testCoinTag])
+  printResource(testCoinInfo);
+  const registry = await SwapTs.TokenRegistry.TokenRegistry.load(repo, client, contractAddress, []);
+  for(const tokenInfo of registry.token_info_list) {
+    if(tokenInfo.delisted) {
+      continue;
+    }
+    const tag = typeInfoToTypeTag(tokenInfo.token_type);
+    if(getTypeTagFullname(tag) === getTypeTagFullname(testCoinTag)) {
+      console.log("TestCoin already registered.");
+      return;
+    }
+  }
+  const result = await SwapTs.TokenRegistry.add_token_script(
+    client, 
+    account, 
+    new AptosVectorU8("TestCoin"), 
+    new AptosVectorU8("APTOS"), 
+    new AptosVectorU8("Aptos TestCoin"), 
+    testCoinInfo.decimals.toJSNumber(),
+    new AptosVectorU8("https://miro.medium.com/max/3150/1*Gf747eyRywU8Img0tK5wvw.png"),
+    new AptosVectorU8("https://aptoslabs.com/"),
+    [testCoinTag]
+  );
+  console.log(result);
+}
+
+const updateTokenRegistry = async (symbol: string, description: string, logo_url: string, project_url: string) => {
+  const {client, account, contractAddress, netConf} = readConfig(program);
+  const payload = SwapTs.TokenRegistry.build_payload_update_token_info_script(
+    new AptosVectorU8(symbol), 
+    new AptosVectorU8(description), 
+    new AptosVectorU8(logo_url), 
+    new AptosVectorU8(project_url), 
+    []
+  );
+  await sendPayloadTx(client, account, payload, 3000);
+}
+
+const others = new Command('others');
+
+others
+  .command("check-test-coin")
+  .action(checkTestCoin);
+
+others
+  .command("update-token-registry")
+  .argument("<SYMBOL>")
+  .argument("<description>")
+  .argument("<logo_url>")
+  .argument("<project_url>")
+  .action(updateTokenRegistry);
+
+program.addCommand(others);
 
 program.parse();

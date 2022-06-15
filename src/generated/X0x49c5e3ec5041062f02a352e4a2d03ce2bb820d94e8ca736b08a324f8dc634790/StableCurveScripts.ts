@@ -99,6 +99,45 @@ export function build_payload_add_liquidity(
   );
 }
 
+export async function remove_liquidity(
+  client: AptosClient,
+  account: AptosAccount,
+  liquidity: bigInt.BigInteger,
+  min_amount_x: bigInt.BigInteger,
+  min_amount_y: bigInt.BigInteger,
+  typeParams: TypeTag[],
+) {
+  const typeParamStrings = typeParams.map(t=>getTypeTagFullname(t));
+  return sendAndWait(
+    client,
+    account,
+    "0x49c5e3ec5041062f02a352e4a2d03ce2bb820d94e8ca736b08a324f8dc634790::StableCurveScripts::remove_liquidity",
+    typeParamStrings,
+    [
+      liquidity.toString(),
+      min_amount_x.toString(),
+      min_amount_y.toString(),
+    ]
+  );
+}
+export function build_payload_remove_liquidity(
+  liquidity: bigInt.BigInteger,
+  min_amount_x: bigInt.BigInteger,
+  min_amount_y: bigInt.BigInteger,
+  typeParams: TypeTag[],
+) {
+  const typeParamStrings = typeParams.map(t=>getTypeTagFullname(t));
+  return buildPayload(
+    "0x49c5e3ec5041062f02a352e4a2d03ce2bb820d94e8ca736b08a324f8dc634790::StableCurveScripts::remove_liquidity",
+    typeParamStrings,
+    [
+      liquidity.toString(),
+      min_amount_x.toString(),
+      min_amount_y.toString(),
+    ]
+  );
+}
+
 export async function swap_script(
   client: AptosClient,
   account: AptosAccount,

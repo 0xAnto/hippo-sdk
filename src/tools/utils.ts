@@ -1,4 +1,6 @@
 import { AptosAccount, AptosClient, HexString, Types } from "aptos";
+import { AptosError, UserTransaction } from "aptos/dist/api/data-contracts";
+import { ContentType } from "aptos/dist/api/http-client";
 import { Command } from "commander";
 import * as fs from "fs";
 import * as yaml from "yaml";
@@ -45,4 +47,25 @@ export async function sendPayloadTx(
   await client.waitForTransaction(txnResult.hash);
   const txDetails = (await client.getTransaction(txnResult.hash)) as Types.UserTransaction;
   console.log(txDetails);
+}
+
+export async function simulatePayloadTx(
+  client: AptosClient, 
+  account: AptosAccount, 
+  payload: Types.TransactionPayload, 
+  max_gas=1000
+){
+  const txnRequest = await client.generateTransaction(account.address(), payload, {max_gas_amount: `${max_gas}`});
+  const signedTxn = await client.signTransaction(account, txnRequest);
+  const http = client.transactions.http;
+
+  const response = await http.request<UserTransaction, AptosError>({
+    path: `/simulate_transaction`,
+    method: "POST",
+    body: signedTxn,
+    type: ContentType.Json,
+    format: "json",
+  });
+  console.log(response.status);
+  return response.data;
 }
